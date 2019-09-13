@@ -1,18 +1,22 @@
 import * as React from 'react';
 import { accessibleRouteChangeHandler } from '@app/utils/utils';
 
-interface IDynamicImport {
-  load: () => Promise<any>;
-  children: any;
+interface IDynamicImportProps<P> {
+  load: () => Promise<React.ComponentType<P>>;
+  children: (component: React.ComponentType<P> | null) => any;
   focusContentAfterMount: boolean;
 }
 
-class DynamicImport extends React.Component<IDynamicImport> {
+interface IDynamicImportState<P> {
+  component: React.ComponentType<P> | null;
+}
+
+class DynamicImport<P> extends React.Component<IDynamicImportProps<P>, IDynamicImportState<P>> {
   public state = {
     component: null
   };
   private routeFocusTimer: number;
-  constructor(props: IDynamicImport) {
+  constructor(props) {
     super(props);
     this.routeFocusTimer = 0;
   }
@@ -25,7 +29,7 @@ class DynamicImport extends React.Component<IDynamicImport> {
       .then(component => {
         if (component) {
           this.setState({
-            component: component.default ? component.default : component
+            component: component
           });
         }
       })

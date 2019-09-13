@@ -11,7 +11,7 @@ import {
   EmptyStateSecondaryActions
 } from '@patternfly/react-core';
 
-const Support: React.FunctionComponent<any> = (props) => {
+export const Support: React.FunctionComponent<{}> = (props) => {
   return (
     <PageSection>
       <EmptyState variant={EmptyStateVariant.full}>
@@ -36,5 +36,3 @@ const Support: React.FunctionComponent<any> = (props) => {
     </PageSection>
   );
 }
-
-export { Support };
