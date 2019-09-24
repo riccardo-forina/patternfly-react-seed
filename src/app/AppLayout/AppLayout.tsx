@@ -10,7 +10,6 @@ import {
   PageSidebar,
   SkipToContent
 } from '@patternfly/react-core';
-import { routes } from '@app/routes';
 
 interface IAppLayout {
   children: React.ReactNode;
@@ -47,13 +46,13 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({children}) => {
   const Navigation = (
     <Nav id="nav-primary-simple">
       <NavList id="nav-list-simple" variant={NavVariants.simple}>
-        {routes.map((route, idx) => {
+        {/* {[].map((route, idx) => {
           return (
             <NavItem key={`${route.label}-${idx}`} id={`${route.label}-${idx}`}>
               <NavLink exact={true} to={route.path} activeClassName="pf-m-current">{route.label}</NavLink>
             </NavItem>
           );
-        })}
+        })} */}
       </NavList>
     </Nav>
   );

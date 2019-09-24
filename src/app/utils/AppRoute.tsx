@@ -1,45 +1,82 @@
 import * as React from 'react';
-import { RouteComponentProps, Route } from 'react-router';
-import { useA11yRouteChange } from '@app/utils/useA11yRouteChange';
-import { useDocumentTitle } from '@app/utils/useDocumentTitle';
-import { LazyRoute } from './LazyRoute';
+import { Route, RouteComponentProps, Redirect } from 'react-router-dom';
+import { LazyRoute } from '@app/utils/LazyRoute';
+import { useA11yRouteChange } from './useA11yRouteChange';
+import { useDocumentTitle } from './useDocumentTitle';
 
-export interface IRenderProps<P, R> {
-  Component: React.ReactType<P>;
+export type IRenderType<ComponentProps, R> = (props: IRenderProps<ComponentProps, R>) => React.ReactNode;
+
+export interface IRenderProps<ComponentProps, R> {
+  Component: React.ComponentType<ComponentProps>;
   route: RouteComponentProps<R>;
+  subroutes?: React.ReactNode;
+  redirect: (to: string) => React.ReactNode
 }
 
-export interface IAppRouteProps<P, R> {
-  isAsync?: boolean;
-  exact?: boolean;
+export interface IAppRouteProps<ComponentProps, R> {
   path: string;
+  exact?: boolean;
   title: string;
-  getComponent: () => Promise<React.ComponentType<P>>
-  render: (props: IRenderProps<P, R>) => React.ReactNode;
+  Component?: React.ComponentType<ComponentProps>;
+  getComponent?: () => Promise<React.ComponentType<ComponentProps>>;
+  render?: IRenderType<ComponentProps, R>;
+  children?: (path: string) => React.ReactNode;
 }
 
-export function AppRoute<P, R> ({
-  isAsync = false,
+export function AppRoute<ComponentProps, RouteParams>({
+  path,
+  exact = false,
   title,
-  render,
+  Component,
   getComponent,
-  ...rest
-}: React.PropsWithChildren<IAppRouteProps<P, R>>) {
+  children,
+  render = ({ Component }) => (<Component>{ children && children(path) }</Component>)
+}: IAppRouteProps<ComponentProps, RouteParams>) {
+  const isAsync = typeof getComponent === 'function';
+  const subroutes = children && children(path);
+
   useA11yRouteChange(isAsync);
   useDocumentTitle(title);
 
-  const routeRender = React.useCallback(
-    (route: RouteComponentProps<R>) => {
-      return (
-        <LazyRoute<P, R> 
-          route={route}
-          getComponent={getComponent}
-          renderComponent={render}
-        />
-      );
-    },
-    [render, getComponent]
+  const redirectFactory = (route: RouteComponentProps<RouteParams>) => (to: string) => (
+    <>
+      <Redirect
+        from={route.match.path}
+        to={to}
+      />
+      {subroutes}
+    </>
   );
+  
+  const renderAsyncComponent = (route: RouteComponentProps<RouteParams>) => {
+    return (
+      <LazyRoute<ComponentProps, RouteParams> 
+        route={route} 
+        getComponent={getComponent!} 
+        renderComponent={(props) => render({ 
+          ...props, 
+          redirect: redirectFactory(route),
+          subroutes 
+        })} 
+      />
+    );
+  };
 
-  return <Route<R> render={routeRender} {...rest} />;
-};
+  const renderSyncComponent = (route: RouteComponentProps<RouteParams>) => {
+    return render({
+      Component: Component!,
+      subroutes,
+      redirect: redirectFactory(route),
+      route
+    });
+  };
+
+  return (
+    <Route
+      render={isAsync ? renderAsyncComponent : renderSyncComponent}
+      exact={exact}
+      path={path}
+      key={path}
+    />
+  );
+}

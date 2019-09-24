@@ -7,16 +7,19 @@ import {
 } from '@patternfly/react-core';
 
 export interface IParameterizedProps {
-  foo: number;
+  param: number;
 }
 
-export const Parameterized: React.FunctionComponent<IParameterizedProps> = ({ foo }) => {
+export const Parameterized: React.FunctionComponent<IParameterizedProps> = ({ param, children }) => {
   return (
-    <PageSection>
-      <TextContent>
-        <Title size={"xl"}>Parametrized route</Title>
-        <Text>Foo: {foo}</Text>
-      </TextContent>
-    </PageSection>
+    <>
+      <PageSection>
+        <TextContent>
+          <Title size={"xl"}>Parametrized route</Title>
+          <Text>Param: {param}</Text>
+        </TextContent>      
+      </PageSection>
+      {children}
+    </>
   );
 }
